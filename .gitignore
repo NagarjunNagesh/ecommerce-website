@@ -1,2 +1,8 @@
 /vendor
 coverage.out
+coverage
+*debug
+*.log
+*.out
+*.test
+*.exe*

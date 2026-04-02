@@ -1,29 +1,42 @@
 package catalog
 
-import "github.com/mytheresa/go-hiring-challenge/models"
+import (
+	"log"
+
+	"github.com/mytheresa/go-hiring-challenge/models"
+)
 
 type Product struct {
 	Code  string  `json:"code"`
 	Price float64 `json:"price"`
 }
 
-type ProductRepository interface {
+type IProductRepository interface {
 	GetAllProducts() ([]models.Product, error)
 }
 
-type CatalogService struct {
-	repo ProductRepository
+type ICatalogService interface {
+	ListProducts() ([]Product, error)
 }
 
-func NewCatalogService(repo ProductRepository) *CatalogService {
+type CatalogService struct {
+	repo IProductRepository
+}
+
+func NewCatalogService(repo IProductRepository) *CatalogService {
 	return &CatalogService{repo: repo}
 }
 
 func (s *CatalogService) ListProducts() ([]Product, error) {
+	log.Printf("catalog service: listing products")
+
 	products, err := s.repo.GetAllProducts()
 	if err != nil {
+		log.Printf("catalog service: failed to fetch products: %v", err)
 		return nil, err
 	}
+
+	log.Printf("catalog service: fetched %d products", len(products))
 
 	return toCatalogProducts(products), nil
 }
