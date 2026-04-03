@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-04-03
 
 ### Added
+- Update the catalog handler and relevant repositories to include the product category in the response.
+
 - Implement the categories endpoint at `/categories`. Created `app/categories` - handler and service classes.
   - This endpoint should return a list of all categories.
   - Provide unit tests for this endpoint.
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Refactored `products` to add `category_id` as an extra column with Foreign Key Constraint and Indexing for category id based product retrieval from Postgres.
+- - Refactored `ProductsRepository` to preload the category, added `Category` type to the Products.
 
 
 ## [0.1.0] - 2026-04-02

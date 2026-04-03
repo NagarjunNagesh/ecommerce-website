@@ -27,8 +27,8 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 	t.Run("returns products as json", func(t *testing.T) {
 		repo := &fakeProductRepository{
 			products: []models.Product{
-				{Code: "PROD001", Price: decimal.NewFromFloat(99.99)},
-				{Code: "PROD002", Price: decimal.NewFromFloat(120.00)},
+				{Code: "PROD001", Price: decimal.NewFromFloat(99.99), Category: &models.Category{Code: "clothing", Name: "Clothing"}},
+				{Code: "PROD002", Price: decimal.NewFromFloat(120.00), Category: &models.Category{Code: "shoes", Name: "Shoes"}},
 			},
 		}
 		handler := NewCatalogHandler(repo)
@@ -40,7 +40,7 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
-		assert.JSONEq(t, `{"products":[{"code":"PROD001","price":99.99},{"code":"PROD002","price":120}]}`, recorder.Body.String())
+		assert.JSONEq(t, `{"products":[{"code":"PROD001","price":99.99,"category":{"code":"clothing","name":"Clothing"}},{"code":"PROD002","price":120,"category":{"code":"shoes","name":"Shoes"}}]}`, recorder.Body.String())
 	})
 
 	t.Run("returns internal server error when repository fails", func(t *testing.T) {

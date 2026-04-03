@@ -8,9 +8,8 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Catalog endpoint
 
-1. Catalog endpoint depends on `models.ProductsRepository` to fetch products. Refactor this in a more idiomatic way.
-
-2. Create a new model for Product Categories, and make sure products are linked to them based on the following:
+1. `DONE` - Catalog endpoint depends on `models.ProductsRepository` to fetch products. Refactor this in a more idiomatic way.
+2. `DONE` - Create a new model for Product Categories, and make sure products are linked to them based on the following: 
 
    - Categories will have the following fields:
      - ID (internal use only)
@@ -22,7 +21,7 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
      - _PROD003, PROD005, PROD008_ will belong to "Accessories".
    - Follow the pattern introduced for the migrations files, and the implementation of the gorm models.
 
-3. Update the catalog handler and relevant repositories to include the product category in the response.
+3. `DONE` - Update the catalog handler and relevant repositories to include the product category in the response.
 
 4. Update the catalog handler and relevant repositories to support offset pagination.
 
@@ -46,7 +45,7 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Categories endpoint
 
-1. Implement the categories endpoint at `/categories`.
+1. `DONE` - Implement the categories endpoint at `/categories`.
 
 - This endpoint should return a list of all categories.
 - Provide unit tests for this endpoint.
@@ -58,6 +57,6 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Testing
 
-1. Provide unit tests for `app/catalog/handler.go`. Make sure to cover the new features implemented in the catalog endpoint.
+1. `INPROGRESS` - Provide unit tests for `app/catalog/handler.go`. Make sure to cover the new features implemented in the catalog endpoint.
 
-2. Implement the functions in `app/api/response.go` to satisfy the provided unit tests and refactor all handlers to use these functions where appropriate.
+2. `DONE` - Implement the functions in `app/api/response.go` to satisfy the provided unit tests and refactor all handlers to use these functions where appropriate.
