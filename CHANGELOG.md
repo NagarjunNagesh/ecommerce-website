@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.1.0] - 2026-04-04
+
+### Added
+- Implement the product details endpoint at `/catalog/{code}`.
+  - This endpoint should return the product details including its variants. Do note that variants without specific price should inherit the price from the product.
+  - The product details should include the product's category.
+  - Provide unit tests for this endpoint.
+
+
+
 ## [0.1.0] - 2026-04-03
 
 ### Added
@@ -22,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Refactored `products` to add `category_id` as an extra column with Foreign Key Constraint and Indexing for category id based product retrieval from Postgres.
-- - Refactored `ProductsRepository` to preload the category, added `Category` type to the Products.
+- Refactored `ProductsRepository` to preload the category, added `Category` type to the Products.
 
 
 ## [0.1.0] - 2026-04-02
@@ -35,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced `CatalogService` to separate HTTP handling from business logic
 
 ### Fixed
--- Refactored `CatalogHandler` to depend on a `ICategoryService` interface instead of the class `CatalogService` , following the Dependency Inversion Principle.
+- Refactored `CatalogHandler` to depend on a `ICategoryService` interface instead of the class `CatalogService` , following the Dependency Inversion Principle.
 - Added Relevant Logs to the `CatalogService` to better analyse the code.
 - Added `CatalogServiceTest` to expand the unit testing to business logic.
 

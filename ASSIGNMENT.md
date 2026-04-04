@@ -37,7 +37,7 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Product details endpoint
 
-1. Implement the product details endpoint at `/catalog/:code`.
+1. `DONE` - Implement the product details endpoint at `/catalog/:code`.
 
 - This endpoint should return the product details including its variants. Do note that variants without specific price should inherit the price from the product.
 - The product details should include the product's category.

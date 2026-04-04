@@ -1,15 +1,12 @@
 package catalog
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 )
-
-type Response struct {
-	Products []Product `json:"products"`
-}
 
 type CatalogHandler struct {
 	service ICatalogService
@@ -34,4 +31,26 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	log.Printf("catalog handler: returning %d products", len(products))
 
 	api.OKResponse(w, Response{Products: products})
+}
+
+func (h *CatalogHandler) HandleGetDetail(w http.ResponseWriter, r *http.Request) {
+	code := r.PathValue("code")
+	log.Printf("catalog detail handler: %s %s code=%s", r.Method, r.URL.Path, code)
+
+	product, err := h.service.GetProductDetail(code)
+	if err != nil {
+		if errors.Is(err, ErrProductNotFound) {
+			log.Printf("catalog detail handler: product not found for code=%s", code)
+			api.ErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		log.Printf("catalog detail handler: failed to get product detail for code=%s: %v", code, err)
+		api.ErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	log.Printf("catalog detail handler: returning product %s with %d variants", product.Code, len(product.Variants))
+	
+	api.OKResponse(w, DetailResponse{Product: *product})
 }

@@ -21,3 +21,11 @@ func (r *ProductsRepository) GetAllProducts() ([]Product, error) {
 	}
 	return products, nil
 }
+
+func (r *ProductsRepository) GetProductByCode(code string) (*Product, error) {
+	var product Product
+	if err := r.db.Preload("Category").Preload("Variants").Where("code = ?", code).First(&product).Error; err != nil {
+		return nil, err
+	}
+	return &product, nil
+}
