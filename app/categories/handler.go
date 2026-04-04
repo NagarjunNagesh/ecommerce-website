@@ -46,6 +46,8 @@ func (h *CategoriesHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Unimplemented - validate input (code and name should be alphanumeric)
+
 	category, err := h.service.CreateCategory(req)
 	if err != nil {
 		if errors.Is(err, ErrInvalidCategoryInput) || errors.Is(err, ErrCategoryAlreadyExists) {

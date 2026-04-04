@@ -10,7 +10,7 @@ import (
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 )
 
-var productCodeRE = regexp.MustCompile(`^PROD\d{3}$`)
+var productCodeRE = regexp.MustCompile(`^PROD\d{3,}$`)
 
 type CatalogHandler struct {
 	service ICatalogService
