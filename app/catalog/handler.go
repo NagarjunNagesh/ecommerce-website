@@ -4,9 +4,13 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 )
+
+var productCodeRE = regexp.MustCompile(`^PROD\d{3}$`)
 
 type CatalogHandler struct {
 	service ICatalogService
@@ -35,6 +39,14 @@ func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 
 func (h *CatalogHandler) HandleGetDetail(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
+	log.Printf("catalog detail handler: received request for code=%s", code)
+
+	if err := validateProductCode(code); err != nil {
+		log.Printf("catalog detail handler: invalid product code '%s': %v", code, err)
+        api.ErrorResponse(w, http.StatusBadRequest, err.Error())
+        return
+    }
+
 	log.Printf("catalog detail handler: %s %s code=%s", r.Method, r.URL.Path, code)
 
 	product, err := h.service.GetProductDetail(code)
@@ -51,6 +63,19 @@ func (h *CatalogHandler) HandleGetDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	log.Printf("catalog detail handler: returning product %s with %d variants", product.Code, len(product.Variants))
-	
+
 	api.OKResponse(w, DetailResponse{Product: *product})
+}
+
+func validateProductCode(code string) error {
+	code = strings.TrimSpace(code)
+
+	switch {
+	case code == "":
+		return errors.New("code is required")
+	case !productCodeRE.MatchString(code):
+		return errors.New("invalid product code format")
+	default:
+		return nil
+	}
 }

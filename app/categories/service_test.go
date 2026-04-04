@@ -20,6 +20,13 @@ func (f *fakeCategoryRepositoryForService) GetAllCategories() ([]models.Category
 	return f.categories, nil
 }
 
+func (f *fakeCategoryRepositoryForService) CreateCategory(category *models.Category) error {
+	if f.err != nil {
+		return f.err
+	}
+	return nil
+}
+
 func TestCategoriesServiceListCategories(t *testing.T) {
 	t.Run("maps repository categories to api response", func(t *testing.T) {
 		repo := &fakeCategoryRepositoryForService{
@@ -48,5 +55,53 @@ func TestCategoriesServiceListCategories(t *testing.T) {
 
 		assert.Nil(t, categories)
 		assert.EqualError(t, err, "database unavailable")
+	})
+}
+
+func TestCategoriesServiceCreateCategory(t *testing.T) {
+	t.Run("successfully creates a category", func(t *testing.T) {
+		repo := &fakeCategoryRepositoryForService{}
+		service := NewCategoriesService(repo)
+
+		req := CreateCategoryRequest{Code: "test", Name: "Test Category"}
+		res, err := service.CreateCategory(req)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, "test", res.Code)
+		assert.Equal(t, "Test Category", res.Name)
+	})
+
+	t.Run("returns error when code is empty", func(t *testing.T) {
+		repo := &fakeCategoryRepositoryForService{}
+		service := NewCategoriesService(repo)
+
+		req := CreateCategoryRequest{Code: "  ", Name: "Test Category"}
+		res, err := service.CreateCategory(req)
+
+		assert.Nil(t, res)
+		assert.ErrorIs(t, err, ErrInvalidCategoryInput)
+	})
+
+	t.Run("returns error when name is empty", func(t *testing.T) {
+		repo := &fakeCategoryRepositoryForService{}
+		service := NewCategoriesService(repo)
+
+		req := CreateCategoryRequest{Code: "test", Name: ""}
+		res, err := service.CreateCategory(req)
+
+		assert.Nil(t, res)
+		assert.ErrorIs(t, err, ErrInvalidCategoryInput)
+	})
+
+	t.Run("returns error when category code already exists", func(t *testing.T) {
+		repo := &fakeCategoryRepositoryForService{err: errors.New("duplicate key value violates unique constraint")}
+		service := NewCategoriesService(repo)
+
+		req := CreateCategoryRequest{Code: "test", Name: "Test Category"}
+		res, err := service.CreateCategory(req)
+
+		assert.Nil(t, res)
+		assert.ErrorIs(t, err, ErrCategoryAlreadyExists)
 	})
 }

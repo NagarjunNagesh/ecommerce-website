@@ -50,7 +50,7 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 - This endpoint should return a list of all categories.
 - Provide unit tests for this endpoint.
 
-2. Implement an endpoint to create new categories at `/categories`.
+2. `DONE` - Implement an endpoint to create new categories at `/categories`.
 
 - This endpoint should accept a JSON body with the category details from the category model and create a new entry in the DB.
 - Provide unit tests for this endpoint.

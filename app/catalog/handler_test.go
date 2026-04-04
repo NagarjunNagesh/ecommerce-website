@@ -12,6 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const contentType = "Content-Type"
+const applicationJSON = "application/json"
+const catalogPath = "/catalog"
+
 type fakeProductRepository struct {
 	products []models.Product
 	product  *models.Product
@@ -46,12 +50,12 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/catalog", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath, nil)
 
 		handler.HandleGet(recorder, request)
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+		assert.Equal(t, applicationJSON, recorder.Header().Get(contentType))
 		assert.JSONEq(t, `{"products":[{"code":"PROD001","price":99.99,"category":{"code":"clothing","name":"Clothing"}},{"code":"PROD002","price":120,"category":{"code":"shoes","name":"Shoes"}}]}`, recorder.Body.String())
 	})
 
@@ -60,7 +64,7 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/catalog", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath, nil)
 
 		handler.HandleGet(recorder, request)
 
@@ -88,13 +92,13 @@ func TestCatalogHandlerHandleGetDetail(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/catalog/PROD001", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath + "/PROD001", nil)
 		request.SetPathValue("code", "PROD001")
 
 		handler.HandleGetDetail(recorder, request)
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+		assert.Equal(t, applicationJSON, recorder.Header().Get(contentType))
 		assert.JSONEq(t, `{"product":{"code":"PROD001","price":99.99,"category":{"code":"clothing","name":"Clothing"},"variants":[{"name":"Variant A","sku":"SKU001A","price":89.99},{"name":"Variant B","sku":"SKU001B","price":99.99}]}}`, recorder.Body.String())
 	})
 
@@ -103,8 +107,8 @@ func TestCatalogHandlerHandleGetDetail(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/catalog/UNKNOWN", nil)
-		request.SetPathValue("code", "UNKNOWN")
+		request := httptest.NewRequest(http.MethodGet, catalogPath + "/PROD999", nil)
+		request.SetPathValue("code", "PROD999")
 
 		handler.HandleGetDetail(recorder, request)
 
@@ -117,7 +121,7 @@ func TestCatalogHandlerHandleGetDetail(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/catalog/PROD001", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath + "/PROD001", nil)
 		request.SetPathValue("code", "PROD001")
 
 		handler.HandleGetDetail(recorder, request)

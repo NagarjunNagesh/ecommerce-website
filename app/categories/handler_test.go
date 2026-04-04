@@ -1,6 +1,8 @@
 package categories
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +11,10 @@ import (
 	"github.com/mytheresa/go-hiring-challenge/models"
 	"github.com/stretchr/testify/assert"
 )
+
+const contentType = "Content-Type"
+const applicationJSON = "application/json"
+const categoriesPath = "/categories"
 
 type fakeCategoryRepository struct {
 	categories []models.Category
@@ -22,6 +28,13 @@ func (f *fakeCategoryRepository) GetAllCategories() ([]models.Category, error) {
 	return f.categories, nil
 }
 
+func (f *fakeCategoryRepository) CreateCategory(category *models.Category) error {
+	if f.err != nil {
+		return f.err
+	}
+	return nil
+}
+
 func TestCategoriesHandlerHandleGet(t *testing.T) {
 	t.Run("returns categories as json", func(t *testing.T) {
 		repo := &fakeCategoryRepository{
@@ -33,12 +46,12 @@ func TestCategoriesHandlerHandleGet(t *testing.T) {
 		handler := NewCategoriesHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/categories", nil)
+		request := httptest.NewRequest(http.MethodGet, categoriesPath, nil)
 
 		handler.HandleGet(recorder, request)
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+		assert.Equal(t, applicationJSON, recorder.Header().Get(contentType))
 		assert.JSONEq(t, `[{"code":"clothing","name":"Clothing"},{"code":"shoes","name":"Shoes"}]`, recorder.Body.String())
 	})
 
@@ -47,12 +60,83 @@ func TestCategoriesHandlerHandleGet(t *testing.T) {
 		handler := NewCategoriesHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, "/categories", nil)
+		request := httptest.NewRequest(http.MethodGet, categoriesPath, nil)
 
 		handler.HandleGet(recorder, request)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
-		assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+		assert.Equal(t, applicationJSON, recorder.Header().Get(contentType))
 		assert.JSONEq(t, `{"error":"database unavailable"}`, recorder.Body.String())
+	})
+}
+
+func TestCategoriesHandlerHandlePost(t *testing.T) {
+	t.Run("creates a category", func(t *testing.T) {
+		repo := &fakeCategoryRepository{}
+		handler := NewCategoriesHandler(repo)
+
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "test", Name: "Test Category"})
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusCreated, recorder.Code)
+		assert.Equal(t, applicationJSON, recorder.Header().Get(contentType))
+		assert.JSONEq(t, `{"code":"test","name":"Test Category"}`, recorder.Body.String())
+	})
+
+	t.Run("returns bad request for invalid json", func(t *testing.T) {
+		repo := &fakeCategoryRepository{}
+		handler := NewCategoriesHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBufferString(`{"invalid":json`))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"invalid request body"}`, recorder.Body.String())
+	})
+
+	t.Run("returns bad request for missing fields", func(t *testing.T) {
+		repo := &fakeCategoryRepository{}
+		handler := NewCategoriesHandler(repo)
+
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "", Name: "Test Category"})
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"code and name are required"}`, recorder.Body.String())
+	})
+
+	t.Run("returns bad request for unknown fields", func(t *testing.T) {
+		repo := &fakeCategoryRepository{}
+		handler := NewCategoriesHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBufferString(`{"code":"test", "name":"Test", "extra":"field"}`))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"invalid request body"}`, recorder.Body.String())
+	})
+
+	t.Run("returns bad request (400) for duplicate key per user preference", func(t *testing.T) {
+		repo := &fakeCategoryRepository{err: errors.New("duplicate key exists")}
+		handler := NewCategoriesHandler(repo)
+
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "test", Name: "Test Category"})
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"category code already exists"}`, recorder.Body.String())
 	})
 }

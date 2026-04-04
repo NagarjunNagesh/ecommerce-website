@@ -1,16 +1,26 @@
 package categories
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/mytheresa/go-hiring-challenge/app/api"
 	"github.com/mytheresa/go-hiring-challenge/models"
 )
 
+var (
+	ErrCategoryAlreadyExists = errors.New("category code already exists")
+	ErrInvalidCategoryInput  = errors.New("code and name are required")
+)
+
 type ICategoryRepository interface {
 	GetAllCategories() ([]models.Category, error)
+	CreateCategory(category *models.Category) error
 }
 
 type ICategoriesService interface {
 	ListCategories() ([]api.CategoryResponse, error)
+	CreateCategory(req CreateCategoryRequest) (*api.CategoryResponse, error)
 }
 
 type CategoriesService struct {
@@ -27,6 +37,32 @@ func (s *CategoriesService) ListCategories() ([]api.CategoryResponse, error) {
 		return nil, err
 	}
 	return toCategoryResponse(categories), nil
+}
+
+func (s *CategoriesService) CreateCategory(req CreateCategoryRequest) (*api.CategoryResponse, error) {
+	code := strings.TrimSpace(req.Code)
+	name := strings.TrimSpace(req.Name)
+
+	if code == "" || name == "" {
+		return nil, ErrInvalidCategoryInput
+	}
+
+	category := &models.Category{
+		Code: code,
+		Name: name,
+	}
+
+	if err := s.repo.CreateCategory(category); err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return nil, ErrCategoryAlreadyExists
+		}
+		return nil, err
+	}
+
+	return &api.CategoryResponse{
+		Code: category.Code,
+		Name: category.Name,
+	}, nil
 }
 
 func toCategoryResponse(categories []models.Category) []api.CategoryResponse {

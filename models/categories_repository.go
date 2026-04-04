@@ -21,3 +21,7 @@ func (r *CategoriesRepository) GetAllCategories() ([]Category, error) {
 	}
 	return categories, nil
 }
+
+func (r *CategoriesRepository) CreateCategory(category *Category) error {
+	return r.db.Create(category).Error
+}

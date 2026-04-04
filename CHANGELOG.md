@@ -5,11 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unimplemented
+- `POST /categories` json field `code` and `name` sanitation where these two json objects create multiple entries because of space. 
+  - `{"code":"baby  clothes","name": "Baby Clothes"}`  and `{"code":"baby clothes","name": "Baby Clothes"}` create two entries in DB.
 
 ## [0.1.0] - 2026-04-04
 
 ### Added
-- Implement the product details endpoint at `/catalog/{code}`.
+- Implement an endpoint to create new categories at `POST /categories`.
+  - This endpoint should accept a JSON body with the category details from the category model and create a new entry in the DB.
+  - Provide unit tests for this endpoint.
+
+
+- Implement the product details endpoint at `GET /catalog/{code}`.
   - This endpoint should return the product details including its variants. Do note that variants without specific price should inherit the price from the product.
   - The product details should include the product's category.
   - Provide unit tests for this endpoint.
