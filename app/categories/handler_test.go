@@ -15,6 +15,9 @@ import (
 const contentType = "Content-Type"
 const applicationJSON = "application/json"
 const categoriesPath = "/categories"
+const handlerTestCategoryCode = "test"
+const handlerTestCategoryName = "Test Category"
+const handlerTestDatabaseUnavailable = "database unavailable"
 
 type fakeCategoryRepository struct {
 	categories []models.Category
@@ -56,7 +59,7 @@ func TestCategoriesHandlerHandleGet(t *testing.T) {
 	})
 
 	t.Run("returns internal server error when repository fails", func(t *testing.T) {
-		repo := &fakeCategoryRepository{err: errors.New("database unavailable")}
+		repo := &fakeCategoryRepository{err: errors.New(handlerTestDatabaseUnavailable)}
 		handler := NewCategoriesHandler(repo)
 
 		recorder := httptest.NewRecorder()
@@ -75,7 +78,7 @@ func TestCategoriesHandlerHandlePost(t *testing.T) {
 		repo := &fakeCategoryRepository{}
 		handler := NewCategoriesHandler(repo)
 
-		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "test", Name: "Test Category"})
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: handlerTestCategoryCode, Name: handlerTestCategoryName})
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
 
@@ -103,7 +106,7 @@ func TestCategoriesHandlerHandlePost(t *testing.T) {
 		repo := &fakeCategoryRepository{}
 		handler := NewCategoriesHandler(repo)
 
-		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "", Name: "Test Category"})
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "", Name: handlerTestCategoryName})
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
 
@@ -127,10 +130,10 @@ func TestCategoriesHandlerHandlePost(t *testing.T) {
 	})
 
 	t.Run("returns bad request (400) for duplicate key per user preference", func(t *testing.T) {
-		repo := &fakeCategoryRepository{err: errors.New("duplicate key exists")}
+		repo := &fakeCategoryRepository{err: models.ErrCategoryAlreadyExists}
 		handler := NewCategoriesHandler(repo)
 
-		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "test", Name: "Test Category"})
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: handlerTestCategoryCode, Name: handlerTestCategoryName})
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
 

@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const serviceTestCategoryCode = "test"
+const serviceTestCategoryName = "Test Category"
+const serviceTestDatabaseUnavailable = "database unavailable"
+
 type fakeCategoryRepositoryForService struct {
 	categories []models.Category
 	err        error
@@ -48,13 +52,13 @@ func TestCategoriesServiceListCategories(t *testing.T) {
 	})
 
 	t.Run("returns error when repository fails", func(t *testing.T) {
-		repo := &fakeCategoryRepositoryForService{err: errors.New("database unavailable")}
+		repo := &fakeCategoryRepositoryForService{err: errors.New(serviceTestDatabaseUnavailable)}
 		service := NewCategoriesService(repo)
 
 		categories, err := service.ListCategories()
 
 		assert.Nil(t, categories)
-		assert.EqualError(t, err, "database unavailable")
+		assert.EqualError(t, err, serviceTestDatabaseUnavailable)
 	})
 }
 
@@ -63,20 +67,20 @@ func TestCategoriesServiceCreateCategory(t *testing.T) {
 		repo := &fakeCategoryRepositoryForService{}
 		service := NewCategoriesService(repo)
 
-		req := CreateCategoryRequest{Code: "test", Name: "Test Category"}
+		req := CreateCategoryRequest{Code: serviceTestCategoryCode, Name: serviceTestCategoryName}
 		res, err := service.CreateCategory(req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
-		assert.Equal(t, "test", res.Code)
-		assert.Equal(t, "Test Category", res.Name)
+		assert.Equal(t, serviceTestCategoryCode, res.Code)
+		assert.Equal(t, serviceTestCategoryName, res.Name)
 	})
 
 	t.Run("returns error when code is empty", func(t *testing.T) {
 		repo := &fakeCategoryRepositoryForService{}
 		service := NewCategoriesService(repo)
 
-		req := CreateCategoryRequest{Code: "  ", Name: "Test Category"}
+		req := CreateCategoryRequest{Code: "  ", Name: serviceTestCategoryName}
 		res, err := service.CreateCategory(req)
 
 		assert.Nil(t, res)
@@ -87,7 +91,7 @@ func TestCategoriesServiceCreateCategory(t *testing.T) {
 		repo := &fakeCategoryRepositoryForService{}
 		service := NewCategoriesService(repo)
 
-		req := CreateCategoryRequest{Code: "test", Name: ""}
+		req := CreateCategoryRequest{Code: serviceTestCategoryCode, Name: ""}
 		res, err := service.CreateCategory(req)
 
 		assert.Nil(t, res)
@@ -95,10 +99,10 @@ func TestCategoriesServiceCreateCategory(t *testing.T) {
 	})
 
 	t.Run("returns error when category code already exists", func(t *testing.T) {
-		repo := &fakeCategoryRepositoryForService{err: errors.New("duplicate key value violates unique constraint")}
+		repo := &fakeCategoryRepositoryForService{err: models.ErrCategoryAlreadyExists}
 		service := NewCategoriesService(repo)
 
-		req := CreateCategoryRequest{Code: "test", Name: "Test Category"}
+		req := CreateCategoryRequest{Code: serviceTestCategoryCode, Name: serviceTestCategoryName}
 		res, err := service.CreateCategory(req)
 
 		assert.Nil(t, res)

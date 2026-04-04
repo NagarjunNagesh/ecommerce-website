@@ -15,6 +15,7 @@ import (
 const contentType = "Content-Type"
 const applicationJSON = "application/json"
 const catalogPath = "/catalog"
+const databaseUnavailable = "database unavailable"
 
 type fakeProductRepository struct {
 	products []models.Product
@@ -60,7 +61,7 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 	})
 
 	t.Run("returns internal server error when repository fails", func(t *testing.T) {
-		repo := &fakeProductRepository{err: errors.New("database unavailable")}
+		repo := &fakeProductRepository{err: errors.New(databaseUnavailable)}
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
@@ -69,7 +70,7 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 		handler.HandleGet(recorder, request)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), "database unavailable")
+		assert.Contains(t, recorder.Body.String(), databaseUnavailable)
 	})
 }
 
@@ -92,7 +93,7 @@ func TestCatalogHandlerHandleGetDetail(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, catalogPath + "/PROD001", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"/PROD001", nil)
 		request.SetPathValue("code", "PROD001")
 
 		handler.HandleGetDetail(recorder, request)
@@ -107,7 +108,7 @@ func TestCatalogHandlerHandleGetDetail(t *testing.T) {
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, catalogPath + "/PROD999", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"/PROD999", nil)
 		request.SetPathValue("code", "PROD999")
 
 		handler.HandleGetDetail(recorder, request)
@@ -117,16 +118,16 @@ func TestCatalogHandlerHandleGetDetail(t *testing.T) {
 	})
 
 	t.Run("returns internal server error when repository fails", func(t *testing.T) {
-		repo := &fakeProductRepository{err: errors.New("database unavailable")}
+		repo := &fakeProductRepository{err: errors.New(databaseUnavailable)}
 		handler := NewCatalogHandler(repo)
 
 		recorder := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, catalogPath + "/PROD001", nil)
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"/PROD001", nil)
 		request.SetPathValue("code", "PROD001")
 
 		handler.HandleGetDetail(recorder, request)
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
-		assert.Contains(t, recorder.Body.String(), "database unavailable")
+		assert.Contains(t, recorder.Body.String(), databaseUnavailable)
 	})
 }

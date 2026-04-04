@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The product details should include the product's category.
   - Provide unit tests for this endpoint.
 
+### Fixed
+- GORM: Translate Errors - https://gorm.io/docs/error_handling.html#Dialect-Translated-Errors
+- `POST /categories` - Transfer Duplicate Key identification to Gorm layer and send business logic specific error.
+- Extract Constants: Maintainable Unit Tests
 
 
 ## [0.1.0] - 2026-04-03

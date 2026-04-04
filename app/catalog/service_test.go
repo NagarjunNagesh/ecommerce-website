@@ -10,6 +10,10 @@ import (
 	"gorm.io/gorm"
 )
 
+const catalogDatabaseUnavailable = "database unavailable"
+const productCodeOne = "PROD001"
+const productCodeTwo = "PROD002"
+
 type fakeIProductRepository struct {
 	products []models.Product
 	product  *models.Product
@@ -37,8 +41,8 @@ func TestCatalogServiceListProducts(t *testing.T) {
 	t.Run("maps repository products to catalog products", func(t *testing.T) {
 		repo := &fakeIProductRepository{
 			products: []models.Product{
-				{Code: "PROD001", Price: decimal.NewFromFloat(99.99)},
-				{Code: "PROD002", Price: decimal.NewFromFloat(120.00)},
+				{Code: productCodeOne, Price: decimal.NewFromFloat(99.99)},
+				{Code: productCodeTwo, Price: decimal.NewFromFloat(120.00)},
 			},
 		}
 		service := NewCatalogService(repo)
@@ -47,20 +51,20 @@ func TestCatalogServiceListProducts(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Len(t, products, 2)
-		assert.Equal(t, "PROD001", products[0].Code)
+		assert.Equal(t, productCodeOne, products[0].Code)
 		assert.Equal(t, 99.99, products[0].Price)
-		assert.Equal(t, "PROD002", products[1].Code)
+		assert.Equal(t, productCodeTwo, products[1].Code)
 		assert.Equal(t, 120.0, products[1].Price)
 	})
 
 	t.Run("returns error when repository fails", func(t *testing.T) {
-		repo := &fakeIProductRepository{err: errors.New("database unavailable")}
+		repo := &fakeIProductRepository{err: errors.New(catalogDatabaseUnavailable)}
 		service := NewCatalogService(repo)
 
 		products, err := service.ListProducts()
 
 		assert.Nil(t, products)
-		assert.EqualError(t, err, "database unavailable")
+		assert.EqualError(t, err, catalogDatabaseUnavailable)
 	})
 }
 
@@ -68,7 +72,7 @@ func TestCatalogServiceGetProductDetail(t *testing.T) {
 	t.Run("maps product details and inherits missing variant prices", func(t *testing.T) {
 		repo := &fakeIProductRepository{
 			product: &models.Product{
-				Code:  "PROD001",
+				Code:  productCodeOne,
 				Price: decimal.NewFromFloat(99.99),
 				Category: &models.Category{
 					Code: "clothing",
@@ -82,11 +86,11 @@ func TestCatalogServiceGetProductDetail(t *testing.T) {
 		}
 		service := NewCatalogService(repo)
 
-		product, err := service.GetProductDetail("PROD001")
+		product, err := service.GetProductDetail(productCodeOne)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, product)
-		assert.Equal(t, "PROD001", product.Code)
+		assert.Equal(t, productCodeOne, product.Code)
 		assert.Equal(t, 99.99, product.Price)
 		assert.NotNil(t, product.Category)
 		assert.Equal(t, "clothing", product.Category.Code)
@@ -106,12 +110,12 @@ func TestCatalogServiceGetProductDetail(t *testing.T) {
 	})
 
 	t.Run("returns error when repository fails", func(t *testing.T) {
-		repo := &fakeIProductRepository{err: errors.New("database unavailable")}
+		repo := &fakeIProductRepository{err: errors.New(catalogDatabaseUnavailable)}
 		service := NewCatalogService(repo)
 
-		product, err := service.GetProductDetail("PROD001")
+		product, err := service.GetProductDetail(productCodeOne)
 
 		assert.Nil(t, product)
-		assert.EqualError(t, err, "database unavailable")
+		assert.EqualError(t, err, catalogDatabaseUnavailable)
 	})
 }

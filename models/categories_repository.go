@@ -1,8 +1,12 @@
 package models
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 )
+
+var ErrCategoryAlreadyExists = errors.New("category code already exists")
 
 type CategoriesRepository struct {
 	db *gorm.DB
@@ -23,5 +27,12 @@ func (r *CategoriesRepository) GetAllCategories() ([]Category, error) {
 }
 
 func (r *CategoriesRepository) CreateCategory(category *Category) error {
-	return r.db.Create(category).Error
+	if err := r.db.Create(category).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return ErrCategoryAlreadyExists
+		}
+		return err
+	}
+
+	return nil
 }

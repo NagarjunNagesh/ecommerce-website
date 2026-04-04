@@ -53,7 +53,7 @@ func (s *CategoriesService) CreateCategory(req CreateCategoryRequest) (*api.Cate
 	}
 
 	if err := s.repo.CreateCategory(category); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		if errors.Is(err, models.ErrCategoryAlreadyExists) {
 			return nil, ErrCategoryAlreadyExists
 		}
 		return nil, err
