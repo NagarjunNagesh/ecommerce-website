@@ -8,9 +8,8 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Catalog endpoint
 
-1. Catalog endpoint depends on `models.ProductsRepository` to fetch products. Refactor this in a more idiomatic way.
-
-2. Create a new model for Product Categories, and make sure products are linked to them based on the following:
+1. `DONE` - Catalog endpoint depends on `models.ProductsRepository` to fetch products. Refactor this in a more idiomatic way.
+2. `DONE` - Create a new model for Product Categories, and make sure products are linked to them based on the following: 
 
    - Categories will have the following fields:
      - ID (internal use only)
@@ -22,23 +21,23 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
      - _PROD003, PROD005, PROD008_ will belong to "Accessories".
    - Follow the pattern introduced for the migrations files, and the implementation of the gorm models.
 
-3. Update the catalog handler and relevant repositories to include the product category in the response.
+3. `DONE` - Update the catalog handler and relevant repositories to include the product category in the response.
 
-4. Update the catalog handler and relevant repositories to support offset pagination.
+4. `DONE` - Update the catalog handler and relevant repositories to support offset pagination.
 
    - The endpoint should accept query parameters `offset` and `limit`.
    - If `offset` is not provided, default to 0.
    - If `limit` is not provided, default to 10. Maximum limit should be 100. Minimum limit should be 1.
    - The response should include the total number of products available.
 
-5. Update the catalog handler to support filtering products by:
+5. `DONE` - Update the catalog handler to support filtering products by:
 
    - Category
    - Price Less Than
 
 ### Product details endpoint
 
-1. Implement the product details endpoint at `/catalog/:code`.
+1. `DONE` - Implement the product details endpoint at `/catalog/:code`.
 
 - This endpoint should return the product details including its variants. Do note that variants without specific price should inherit the price from the product.
 - The product details should include the product's category.
@@ -46,18 +45,18 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Categories endpoint
 
-1. Implement the categories endpoint at `/categories`.
+1. `DONE` - Implement the categories endpoint at `/categories`.
 
 - This endpoint should return a list of all categories.
 - Provide unit tests for this endpoint.
 
-2. Implement an endpoint to create new categories at `/categories`.
+2. `DONE` - Implement an endpoint to create new categories at `/categories`.
 
 - This endpoint should accept a JSON body with the category details from the category model and create a new entry in the DB.
 - Provide unit tests for this endpoint.
 
 ### Testing
 
-1. Provide unit tests for `app/catalog/handler.go`. Make sure to cover the new features implemented in the catalog endpoint.
+1. `DONE` - Provide unit tests for `app/catalog/handler.go`. Make sure to cover the new features implemented in the catalog endpoint.
 
-2. Implement the functions in `app/api/response.go` to satisfy the provided unit tests and refactor all handlers to use these functions where appropriate.
+2. `DONE` - Implement the functions in `app/api/response.go` to satisfy the provided unit tests and refactor all handlers to use these functions where appropriate.
