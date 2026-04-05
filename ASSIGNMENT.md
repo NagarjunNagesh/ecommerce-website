@@ -57,6 +57,6 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 ### Testing
 
-1. `INPROGRESS` - Provide unit tests for `app/catalog/handler.go`. Make sure to cover the new features implemented in the catalog endpoint.
+1. `DONE` - Provide unit tests for `app/catalog/handler.go`. Make sure to cover the new features implemented in the catalog endpoint.
 
 2. `DONE` - Implement the functions in `app/api/response.go` to satisfy the provided unit tests and refactor all handlers to use these functions where appropriate.
