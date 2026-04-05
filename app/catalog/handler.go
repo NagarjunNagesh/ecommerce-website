@@ -13,6 +13,11 @@ import (
 var productCodeRE = regexp.MustCompile(`^PROD\d{3,}$`)
 
 const (
+	paramOffset        = "offset"
+	paramLimit         = "limit"
+	paramCategory      = "category"
+	paramPriceLessThan = "priceLessThan"
+
 	defaultOffset = 0
 	defaultLimit  = 10
 	minLimit      = 1
@@ -32,14 +37,14 @@ func NewCatalogHandler(r IProductRepository) *CatalogHandler {
 func (h *CatalogHandler) HandleGet(w http.ResponseWriter, r *http.Request) {
 	log.Printf("catalog handler: %s %s", r.Method, r.URL.Path)
 
-	offset, limit, err := parsePaginationParams(r)
+	input, err := parseListProductsInput(r)
 	if err != nil {
-		log.Printf("catalog handler: invalid pagination params: %v", err)
+		log.Printf("catalog handler: invalid catalog list params: %v", err)
 		api.ErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	products, total, err := h.service.ListProducts(offset, limit)
+	products, total, err := h.service.ListProducts(input)
 	if err != nil {
 		log.Printf("catalog handler: failed to list products: %v", err)
 		api.ErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -94,10 +99,30 @@ func validateProductCode(code string) error {
 	}
 }
 
+func parseListProductsInput(r *http.Request) (ListProductsInput, error) {
+	offset, limit, err := parsePaginationParams(r)
+	if err != nil {
+		return ListProductsInput{}, err
+	}
+
+	query := r.URL.Query()
+	priceLessThan, err := parsePositiveDecimal(query, paramPriceLessThan)
+	if err != nil {
+		return ListProductsInput{}, err
+	}
+
+	return ListProductsInput{
+		Offset:        offset,
+		Limit:         limit,
+		Category:      strings.ToLower(strings.TrimSpace(query.Get(paramCategory))),
+		PriceLessThan: priceLessThan,
+	}, nil
+}
+
 func parsePaginationParams(r *http.Request) (int, int, error) {
 	query := r.URL.Query()
 
-	offset, err := parseIntOrDefault(query, "offset", defaultOffset)
+	offset, err := parseIntOrDefault(query, paramOffset, defaultOffset)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -105,7 +130,7 @@ func parsePaginationParams(r *http.Request) (int, int, error) {
 		return 0, 0, errors.New("offset must be greater than or equal to 0")
 	}
 
-	limit, err := parseIntOrDefault(query, "limit", defaultLimit)
+	limit, err := parseIntOrDefault(query, paramLimit, defaultLimit)
 	if err != nil {
 		return 0, 0, err
 	}

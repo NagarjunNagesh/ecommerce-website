@@ -15,17 +15,15 @@ const productCodeOne = "PROD001"
 const productCodeTwo = "PROD002"
 
 type fakeIProductRepository struct {
-	products       []models.Product
-	total          int64
-	product        *models.Product
-	err            error
-	receivedOffset int
-	receivedLimit  int
+	products        []models.Product
+	total           int64
+	product         *models.Product
+	err             error
+	receivedOptions models.ProductListOptions
 }
 
-func (f *fakeIProductRepository) ListProducts(offset, limit int) (models.ProductPage, error) {
-	f.receivedOffset = offset
-	f.receivedLimit = limit
+func (f *fakeIProductRepository) ListProducts(options models.ProductListOptions) (models.ProductPage, error) {
+	f.receivedOptions = options
 	if f.err != nil {
 		return models.ProductPage{}, f.err
 	}
@@ -52,14 +50,23 @@ func TestCatalogServiceListProducts(t *testing.T) {
 			total: 8,
 		}
 		service := NewCatalogService(repo)
+		priceLessThan := decimal.RequireFromString("150")
 
-		products, total, err := service.ListProducts(2, 5)
+		products, total, err := service.ListProducts(ListProductsInput{
+			Offset:        2,
+			Limit:         5,
+			Category:      "clothing",
+			PriceLessThan: &priceLessThan,
+		})
 
 		assert.NoError(t, err)
 		assert.Equal(t, int64(8), total)
 		assert.Len(t, products, 2)
-		assert.Equal(t, 2, repo.receivedOffset)
-		assert.Equal(t, 5, repo.receivedLimit)
+		assert.Equal(t, 2, repo.receivedOptions.Offset)
+		assert.Equal(t, 5, repo.receivedOptions.Limit)
+		assert.Equal(t, "clothing", repo.receivedOptions.CategoryCode)
+		assert.NotNil(t, repo.receivedOptions.PriceLessThan)
+		assert.True(t, repo.receivedOptions.PriceLessThan.Equal(priceLessThan))
 		assert.Equal(t, productCodeOne, products[0].Code)
 		assert.Equal(t, 99.99, products[0].Price)
 		assert.Equal(t, productCodeTwo, products[1].Code)
@@ -70,7 +77,7 @@ func TestCatalogServiceListProducts(t *testing.T) {
 		repo := &fakeIProductRepository{err: errors.New(catalogDatabaseUnavailable)}
 		service := NewCatalogService(repo)
 
-		products, total, err := service.ListProducts(0, 10)
+		products, total, err := service.ListProducts(ListProductsInput{Offset: 0, Limit: 10})
 
 		assert.Nil(t, products)
 		assert.Equal(t, int64(0), total)

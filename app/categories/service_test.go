@@ -98,6 +98,29 @@ func TestCategoriesServiceCreateCategory(t *testing.T) {
 		assert.ErrorIs(t, err, ErrInvalidCategoryInput)
 	})
 
+	t.Run("normalizes category code to lowercase", func(t *testing.T) {
+		repo := &fakeCategoryRepositoryForService{}
+		service := NewCategoriesService(repo)
+
+		req := CreateCategoryRequest{Code: "  shoes123  ", Name: serviceTestCategoryName}
+		res, err := service.CreateCategory(req)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.Equal(t, "shoes123", res.Code)
+	})
+
+	t.Run("returns error when category code is not lowercase alphanumeric", func(t *testing.T) {
+		repo := &fakeCategoryRepositoryForService{}
+		service := NewCategoriesService(repo)
+
+		req := CreateCategoryRequest{Code: "shoe-items!", Name: serviceTestCategoryName}
+		res, err := service.CreateCategory(req)
+
+		assert.Nil(t, res)
+		assert.ErrorIs(t, err, ErrInvalidCategoryCode)
+	})
+
 	t.Run("returns error when category code already exists", func(t *testing.T) {
 		repo := &fakeCategoryRepositoryForService{err: models.ErrCategoryAlreadyExists}
 		service := NewCategoriesService(repo)

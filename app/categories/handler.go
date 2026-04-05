@@ -48,7 +48,7 @@ func (h *CategoriesHandler) HandlePost(w http.ResponseWriter, r *http.Request) {
 
 	category, err := h.service.CreateCategory(req)
 	if err != nil {
-		if errors.Is(err, ErrInvalidCategoryInput) || errors.Is(err, ErrCategoryAlreadyExists) {
+		if errors.Is(err, ErrInvalidCategoryInput) || errors.Is(err, ErrInvalidCategoryCode) || errors.Is(err, ErrCategoryAlreadyExists) {
 			log.Printf("categories handler: validation/duplicate error: %v", err)
 			api.ErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

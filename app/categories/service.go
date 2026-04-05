@@ -2,6 +2,7 @@ package categories
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/mytheresa/go-hiring-challenge/app/api"
@@ -11,6 +12,9 @@ import (
 var (
 	ErrCategoryAlreadyExists = errors.New("category code already exists")
 	ErrInvalidCategoryInput  = errors.New("code and name are required")
+	ErrInvalidCategoryCode   = errors.New("code must contain only lowercase letters, numbers, and hyphens")
+
+	categoryCodeRE = regexp.MustCompile(`^[a-z0-9-]+$`)
 )
 
 type ICategoryRepository interface {
@@ -45,6 +49,9 @@ func (s *CategoriesService) CreateCategory(req CreateCategoryRequest) (*api.Cate
 
 	if code == "" || name == "" {
 		return nil, ErrInvalidCategoryInput
+	}
+	if !categoryCodeRE.MatchString(code) {
+		return nil, ErrInvalidCategoryCode
 	}
 
 	category := &models.Category{

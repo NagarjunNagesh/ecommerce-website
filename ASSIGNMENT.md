@@ -30,7 +30,7 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
    - If `limit` is not provided, default to 10. Maximum limit should be 100. Minimum limit should be 1.
    - The response should include the total number of products available.
 
-5. Update the catalog handler to support filtering products by:
+5. `DONE` - Update the catalog handler to support filtering products by:
 
    - Category
    - Price Less Than

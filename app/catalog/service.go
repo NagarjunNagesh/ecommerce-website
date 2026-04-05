@@ -12,12 +12,12 @@ import (
 var ErrProductNotFound = errors.New("product not found")
 
 type IProductRepository interface {
-	ListProducts(offset, limit int) (models.ProductPage, error)
+	ListProducts(options models.ProductListOptions) (models.ProductPage, error)
 	GetProductByCode(code string) (*models.Product, error)
 }
 
 type ICatalogService interface {
-	ListProducts(offset, limit int) ([]Product, int64, error)
+	ListProducts(input ListProductsInput) ([]Product, int64, error)
 	GetProductDetail(code string) (*ProductDetail, error)
 }
 
@@ -29,20 +29,29 @@ func NewCatalogService(repo IProductRepository) *CatalogService {
 	return &CatalogService{repo: repo}
 }
 
-func (s *CatalogService) ListProducts(offset, limit int) ([]Product, int64, error) {
-	log.Printf("catalog service: listing products with offset=%d limit=%d", offset, limit)
+func (s *CatalogService) ListProducts(input ListProductsInput) ([]Product, int64, error) {
+	log.Printf(
+		"catalog service: listing products with offset=%d limit=%d category=%s priceLessThan=%v",
+		input.Offset,
+		input.Limit,
+		input.Category,
+		input.PriceLessThan,
+	)
 
-	page, err := s.repo.ListProducts(offset, limit)
-	products := page.Products
-	total := page.Total
+	page, err := s.repo.ListProducts(models.ProductListOptions{
+		Offset:        input.Offset,
+		Limit:         input.Limit,
+		CategoryCode:  input.Category,
+		PriceLessThan: input.PriceLessThan,
+	})
 	if err != nil {
 		log.Printf("catalog service: failed to fetch products: %v", err)
 		return nil, 0, err
 	}
 
-	log.Printf("catalog service: fetched %d products out of %d total", len(products), total)
+	log.Printf("catalog service: fetched %d products out of %d total", len(page.Products), page.Total)
 
-	return toCatalogProducts(products), total, nil
+	return toCatalogProducts(page.Products), page.Total, nil
 }
 
 func (s *CatalogService) GetProductDetail(code string) (*ProductDetail, error) {

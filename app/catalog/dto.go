@@ -1,6 +1,9 @@
 package catalog
 
-import "github.com/mytheresa/go-hiring-challenge/app/api"
+import (
+	"github.com/mytheresa/go-hiring-challenge/app/api"
+	"github.com/shopspring/decimal"
+)
 
 // Product represents the basic product info for lists
 type Product struct {
@@ -33,4 +36,12 @@ type Response struct {
 // DetailResponse represents the product detail response
 type DetailResponse struct {
 	Product ProductDetail `json:"product"`
+}
+
+// ListProductsInput represents the input parameters for listing products
+type ListProductsInput struct {
+	Offset        int
+	Limit         int
+	Category      string
+	PriceLessThan *decimal.Decimal
 }

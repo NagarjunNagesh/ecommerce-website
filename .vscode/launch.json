@@ -20,6 +20,5 @@
             "command": "go test -v -count=1 ./... -coverprofile=coverage.out -covermode=atomic; go tool cover -html coverage.out -o coverage.html",
             "cwd": "${workspaceFolder}"
         }
-        
     ]
 }

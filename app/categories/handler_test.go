@@ -20,8 +20,9 @@ const handlerTestCategoryName = "Test Category"
 const handlerTestDatabaseUnavailable = "database unavailable"
 
 type fakeCategoryRepository struct {
-	categories []models.Category
-	err        error
+	categories      []models.Category
+	err             error
+	createdCategory *models.Category
 }
 
 func (f *fakeCategoryRepository) GetAllCategories() ([]models.Category, error) {
@@ -35,6 +36,7 @@ func (f *fakeCategoryRepository) CreateCategory(category *models.Category) error
 	if f.err != nil {
 		return f.err
 	}
+	f.createdCategory = category
 	return nil
 }
 
@@ -114,6 +116,36 @@ func TestCategoriesHandlerHandlePost(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 		assert.JSONEq(t, `{"error":"code and name are required"}`, recorder.Body.String())
+	})
+
+	t.Run("normalizes category code to lowercase", func(t *testing.T) {
+		repo := &fakeCategoryRepository{}
+		handler := NewCategoriesHandler(repo)
+
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "  Shoes123  ", Name: handlerTestCategoryName})
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusCreated, recorder.Code)
+		assert.NotNil(t, repo.createdCategory)
+		assert.Equal(t, "shoes123", repo.createdCategory.Code)
+		assert.JSONEq(t, `{"code":"shoes123","name":"Test Category"}`, recorder.Body.String())
+	})
+
+	t.Run("returns bad request for non-alphanumeric category code", func(t *testing.T) {
+		repo := &fakeCategoryRepository{}
+		handler := NewCategoriesHandler(repo)
+
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "shoe-items!", Name: handlerTestCategoryName})
+		recorder := httptest.NewRecorder()
+		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
+
+		handler.HandlePost(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.JSONEq(t, `{"error":"code must contain only lowercase letters and numbers"}`, recorder.Body.String())
 	})
 
 	t.Run("returns bad request for unknown fields", func(t *testing.T) {

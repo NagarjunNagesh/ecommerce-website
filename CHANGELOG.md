@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unimplemented
-- `POST /categories` json field `code` and `name` sanitation where these two json objects create multiple entries because of space. 
-  - `{"code":"baby  clothes","name": "Baby Clothes"}`  and `{"code":"baby clothes","name": "Baby Clothes"}` create two entries in DB.
-
 ## [0.1.0] - 2026-04-05
 
 ### Added
+- Update the catalog handler to support filtering products by: category & Price less than.
+  - **GORM Sessions**: https://gorm.io/docs/method_chaining.html#Example-of-Safe-Reuse
+  - **Float** overcome the issue of 0.1+0.1=0.20000007: https://github.com/shopspring/decimal
+
 - Update the catalog handler and relevant repositories to support offset pagination.
    - The endpoint should accept query parameters `offset` and `limit`.
    - If `offset` is not provided, default to 0.
@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - **GORM Order**: https://gorm.io/docs/query.html#Order
    - **GORM LIMIT and OFFSET**: https://gorm.io/docs/query.html#Limit-Offset
    - *Total Number of products available in the DB?* It is ambiguous? - Fetching the total number of products available in the DB rather than the total products returned after offset and limit
+
+### Fixed
+- ***Add Category***: code must contain only lowercase letters, numbers, and hyphens. This was fixed as Get Product - Filter by Category Code expects a lower case, trimmed code. 
+  - `Fixed` - `POST /categories` json field `code` and `name` sanitation where these two json objects create multiple entries because of space. 
+    - `{"code":"baby  clothes","name": "Baby Clothes"}`  and `{"code":"baby clothes","name": "Baby Clothes"}` create two entries in DB.
 
 ## [0.1.0] - 2026-04-04
 
