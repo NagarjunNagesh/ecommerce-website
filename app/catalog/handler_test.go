@@ -18,16 +18,21 @@ const catalogPath = "/catalog"
 const databaseUnavailable = "database unavailable"
 
 type fakeProductRepository struct {
-	products []models.Product
-	product  *models.Product
-	err      error
+	products       []models.Product
+	total          int64
+	product        *models.Product
+	err            error
+	receivedOffset int
+	receivedLimit  int
 }
 
-func (f *fakeProductRepository) GetAllProducts() ([]models.Product, error) {
+func (f *fakeProductRepository) ListProducts(offset, limit int) (models.ProductPage, error) {
+	f.receivedOffset = offset
+	f.receivedLimit = limit
 	if f.err != nil {
-		return nil, f.err
+		return models.ProductPage{}, f.err
 	}
-	return f.products, nil
+	return models.ProductPage{Products: f.products, Total: f.total}, nil
 }
 
 func (f *fakeProductRepository) GetProductByCode(code string) (*models.Product, error) {
@@ -47,6 +52,7 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 				{Code: "PROD001", Price: decimal.NewFromFloat(99.99), Category: &models.Category{Code: "clothing", Name: "Clothing"}},
 				{Code: "PROD002", Price: decimal.NewFromFloat(120.00), Category: &models.Category{Code: "shoes", Name: "Shoes"}},
 			},
+			total: 8,
 		}
 		handler := NewCatalogHandler(repo)
 
@@ -57,7 +63,29 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 		assert.Equal(t, applicationJSON, recorder.Header().Get(contentType))
-		assert.JSONEq(t, `{"products":[{"code":"PROD001","price":99.99,"category":{"code":"clothing","name":"Clothing"}},{"code":"PROD002","price":120,"category":{"code":"shoes","name":"Shoes"}}]}`, recorder.Body.String())
+		assert.Equal(t, 0, repo.receivedOffset)
+		assert.Equal(t, 10, repo.receivedLimit)
+		assert.JSONEq(t, `{"products":[{"code":"PROD001","price":99.99,"category":{"code":"clothing","name":"Clothing"}},{"code":"PROD002","price":120,"category":{"code":"shoes","name":"Shoes"}}],"total":8}`, recorder.Body.String())
+	})
+
+	t.Run("uses explicit pagination params", func(t *testing.T) {
+		repo := &fakeProductRepository{
+			products: []models.Product{
+				{Code: "PROD003", Price: decimal.NewFromFloat(59.99), Category: &models.Category{Code: "accessories", Name: "Accessories"}},
+			},
+			total: 8,
+		}
+		handler := NewCatalogHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"?offset=2&limit=1", nil)
+
+		handler.HandleGet(recorder, request)
+
+		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, 2, repo.receivedOffset)
+		assert.Equal(t, 1, repo.receivedLimit)
+		assert.JSONEq(t, `{"products":[{"code":"PROD003","price":59.99,"category":{"code":"accessories","name":"Accessories"}}],"total":8}`, recorder.Body.String())
 	})
 
 	t.Run("returns internal server error when repository fails", func(t *testing.T) {
@@ -71,6 +99,71 @@ func TestCatalogHandlerHandleGet(t *testing.T) {
 
 		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
 		assert.Contains(t, recorder.Body.String(), databaseUnavailable)
+	})
+
+	t.Run("returns bad request for invalid offset", func(t *testing.T) {
+		repo := &fakeProductRepository{}
+		handler := NewCatalogHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"?offset=abc", nil)
+
+		handler.HandleGet(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "offset must be a valid integer")
+	})
+
+	t.Run("returns bad request for negative offset", func(t *testing.T) {
+		repo := &fakeProductRepository{}
+		handler := NewCatalogHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"?offset=-1", nil)
+
+		handler.HandleGet(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "offset must be greater than or equal to 0")
+	})
+
+	t.Run("returns bad request for invalid limit", func(t *testing.T) {
+		repo := &fakeProductRepository{}
+		handler := NewCatalogHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"?limit=0", nil)
+
+		handler.HandleGet(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "limit must be between 1 and 100")
+	})
+
+	t.Run("returns bad request for limit above maximum", func(t *testing.T) {
+		repo := &fakeProductRepository{}
+		handler := NewCatalogHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"?limit=101", nil)
+
+		handler.HandleGet(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "limit must be between 1 and 100")
+	})
+
+	t.Run("returns bad request for non numeric limit", func(t *testing.T) {
+		repo := &fakeProductRepository{}
+		handler := NewCatalogHandler(repo)
+
+		recorder := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, catalogPath+"?limit=ten", nil)
+
+		handler.HandleGet(recorder, request)
+
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
+		assert.Contains(t, recorder.Body.String(), "limit must be a valid integer")
 	})
 }
 

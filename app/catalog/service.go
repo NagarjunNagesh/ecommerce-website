@@ -12,12 +12,12 @@ import (
 var ErrProductNotFound = errors.New("product not found")
 
 type IProductRepository interface {
-	GetAllProducts() ([]models.Product, error)
+	ListProducts(offset, limit int) (models.ProductPage, error)
 	GetProductByCode(code string) (*models.Product, error)
 }
 
 type ICatalogService interface {
-	ListProducts() ([]Product, error)
+	ListProducts(offset, limit int) ([]Product, int64, error)
 	GetProductDetail(code string) (*ProductDetail, error)
 }
 
@@ -29,18 +29,20 @@ func NewCatalogService(repo IProductRepository) *CatalogService {
 	return &CatalogService{repo: repo}
 }
 
-func (s *CatalogService) ListProducts() ([]Product, error) {
-	log.Printf("catalog service: listing products")
+func (s *CatalogService) ListProducts(offset, limit int) ([]Product, int64, error) {
+	log.Printf("catalog service: listing products with offset=%d limit=%d", offset, limit)
 
-	products, err := s.repo.GetAllProducts()
+	page, err := s.repo.ListProducts(offset, limit)
+	products := page.Products
+	total := page.Total
 	if err != nil {
 		log.Printf("catalog service: failed to fetch products: %v", err)
-		return nil, err
+		return nil, 0, err
 	}
 
-	log.Printf("catalog service: fetched %d products", len(products))
+	log.Printf("catalog service: fetched %d products out of %d total", len(products), total)
 
-	return toCatalogProducts(products), nil
+	return toCatalogProducts(products), total, nil
 }
 
 func (s *CatalogService) GetProductDetail(code string) (*ProductDetail, error) {

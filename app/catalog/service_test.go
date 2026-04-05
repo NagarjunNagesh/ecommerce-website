@@ -15,16 +15,21 @@ const productCodeOne = "PROD001"
 const productCodeTwo = "PROD002"
 
 type fakeIProductRepository struct {
-	products []models.Product
-	product  *models.Product
-	err      error
+	products       []models.Product
+	total          int64
+	product        *models.Product
+	err            error
+	receivedOffset int
+	receivedLimit  int
 }
 
-func (f *fakeIProductRepository) GetAllProducts() ([]models.Product, error) {
+func (f *fakeIProductRepository) ListProducts(offset, limit int) (models.ProductPage, error) {
+	f.receivedOffset = offset
+	f.receivedLimit = limit
 	if f.err != nil {
-		return nil, f.err
+		return models.ProductPage{}, f.err
 	}
-	return f.products, nil
+	return models.ProductPage{Products: f.products, Total: f.total}, nil
 }
 
 func (f *fakeIProductRepository) GetProductByCode(code string) (*models.Product, error) {
@@ -44,13 +49,17 @@ func TestCatalogServiceListProducts(t *testing.T) {
 				{Code: productCodeOne, Price: decimal.NewFromFloat(99.99)},
 				{Code: productCodeTwo, Price: decimal.NewFromFloat(120.00)},
 			},
+			total: 8,
 		}
 		service := NewCatalogService(repo)
 
-		products, err := service.ListProducts()
+		products, total, err := service.ListProducts(2, 5)
 
 		assert.NoError(t, err)
+		assert.Equal(t, int64(8), total)
 		assert.Len(t, products, 2)
+		assert.Equal(t, 2, repo.receivedOffset)
+		assert.Equal(t, 5, repo.receivedLimit)
 		assert.Equal(t, productCodeOne, products[0].Code)
 		assert.Equal(t, 99.99, products[0].Price)
 		assert.Equal(t, productCodeTwo, products[1].Code)
@@ -61,9 +70,10 @@ func TestCatalogServiceListProducts(t *testing.T) {
 		repo := &fakeIProductRepository{err: errors.New(catalogDatabaseUnavailable)}
 		service := NewCatalogService(repo)
 
-		products, err := service.ListProducts()
+		products, total, err := service.ListProducts(0, 10)
 
 		assert.Nil(t, products)
+		assert.Equal(t, int64(0), total)
 		assert.EqualError(t, err, catalogDatabaseUnavailable)
 	})
 }

@@ -4,6 +4,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type ProductPage struct {
+	Products []Product
+	Total    int64
+}
+
 type ProductsRepository struct {
 	db *gorm.DB
 }
@@ -14,12 +19,19 @@ func NewProductsRepository(db *gorm.DB) *ProductsRepository {
 	}
 }
 
-func (r *ProductsRepository) GetAllProducts() ([]Product, error) {
+func (r *ProductsRepository) ListProducts(offset, limit int) (ProductPage, error) {
 	var products []Product
-	if err := r.db.Preload("Category").Preload("Variants").Find(&products).Error; err != nil {
-		return nil, err
+	var total int64
+
+	if err := r.db.Model(&Product{}).Count(&total).Error; err != nil {
+		return ProductPage{}, err
 	}
-	return products, nil
+
+	if err := r.db.Preload("Category").Preload("Variants").Order("code ASC").Offset(offset).Limit(limit).Find(&products).Error; err != nil {
+		return ProductPage{}, err
+	}
+
+	return ProductPage{Products: products, Total: total}, nil
 }
 
 func (r *ProductsRepository) GetProductByCode(code string) (*Product, error) {

@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `POST /categories` json field `code` and `name` sanitation where these two json objects create multiple entries because of space. 
   - `{"code":"baby  clothes","name": "Baby Clothes"}`  and `{"code":"baby clothes","name": "Baby Clothes"}` create two entries in DB.
 
+## [0.1.0] - 2026-04-05
+
+### Added
+- Update the catalog handler and relevant repositories to support offset pagination.
+   - The endpoint should accept query parameters `offset` and `limit`.
+   - If `offset` is not provided, default to 0.
+   - If `limit` is not provided, default to 10. Maximum limit should be 100. Minimum limit should be 1.
+   - The response should include the total number of products available.
+   - **GORM Order**: https://gorm.io/docs/query.html#Order
+   - **GORM LIMIT and OFFSET**: https://gorm.io/docs/query.html#Limit-Offset
+   - *Total Number of products available in the DB?* It is ambiguous? - Fetching the total number of products available in the DB rather than the total products returned after offset and limit
+
 ## [0.1.0] - 2026-04-04
 
 ### Added

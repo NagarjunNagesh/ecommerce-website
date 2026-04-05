@@ -27,6 +27,7 @@ type ProductVariant struct {
 // Response represents the catalog list response
 type Response struct {
 	Products []Product `json:"products"`
+	Total    int64     `json:"total"`
 }
 
 // DetailResponse represents the product detail response

@@ -23,7 +23,7 @@ Writing Idiomatic Go code is crucial, so we will focus on clarity and simplicity
 
 3. `DONE` - Update the catalog handler and relevant repositories to include the product category in the response.
 
-4. Update the catalog handler and relevant repositories to support offset pagination.
+4. `DONE` - Update the catalog handler and relevant repositories to support offset pagination.
 
    - The endpoint should accept query parameters `offset` and `limit`.
    - If `offset` is not provided, default to 0.
