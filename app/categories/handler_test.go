@@ -122,7 +122,7 @@ func TestCategoriesHandlerHandlePost(t *testing.T) {
 		repo := &fakeCategoryRepository{}
 		handler := NewCategoriesHandler(repo)
 
-		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "  Shoes123  ", Name: handlerTestCategoryName})
+		reqBody, _ := json.Marshal(CreateCategoryRequest{Code: "  shoes123  ", Name: handlerTestCategoryName})
 		recorder := httptest.NewRecorder()
 		request, _ := http.NewRequest(http.MethodPost, categoriesPath, bytes.NewBuffer(reqBody))
 
@@ -145,7 +145,7 @@ func TestCategoriesHandlerHandlePost(t *testing.T) {
 		handler.HandlePost(recorder, request)
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-		assert.JSONEq(t, `{"error":"code must contain only lowercase letters and numbers"}`, recorder.Body.String())
+		assert.JSONEq(t, `{"error":"code must contain only lowercase letters, numbers, and hyphens"}`, recorder.Body.String())
 	})
 
 	t.Run("returns bad request for unknown fields", func(t *testing.T) {
